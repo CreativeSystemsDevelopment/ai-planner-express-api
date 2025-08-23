@@ -3,9 +3,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
-const helmet = require('helmet');
-const morgan = require('morgan');
-require('dotenv').config();
 
 const planRoutes = require('./routes/plan');
 const healthRoutes = require('./routes/health');
