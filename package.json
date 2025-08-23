@@ -1,0 +1,31 @@
+{
+  "name": "ai-planner-api",
+  "version": "1.0.0",
+  "description": "Express.js API server for AI Software Development Planner",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node index.js",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "api",
+    "express",
+    "ai",
+    "planner",
+    "vercel"
+  ],
+  "author": "AutoDev Team",
+  "license": "MIT"
+}
