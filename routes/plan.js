@@ -119,13 +119,114 @@ router.post('/', async (req, res) => {
   }
 });
 
+// POST /api/plan/supervisor - Generate supervisor-only response
+router.post('/supervisor', async (req, res) => {
+  try {
+    const { prompt } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'prompt is required'
+      });
+    }
+
+    if (!GEMINI_API_KEY) {
+      return res.status(500).json({
+        error: 'Configuration Error',
+        message: 'Gemini API key not configured'
+      });
+    }
+
+    console.log(`👥 Generating supervisor plan for: "${prompt}"`);
+
+    // Use supervisor-specific prompt
+    const systemPrompt = buildSupervisorPrompt();
+
+    // Call Gemini API
+    const geminiResponse = await axios.post(
+      `${GEMINI_API_URL}?key=${GEMINI_API_KEY}`,
+      {
+        contents: [{
+          parts: [{
+            text: `${systemPrompt}\n\nUser Request: ${prompt}`
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 4096 // Smaller since supervisor response is more focused
+        }
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
+      }
+    );
+
+    const generatedText = geminiResponse.data?.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    if (!generatedText) {
+      throw new Error('No response generated from Gemini API');
+    }
+
+    console.log('✅ Supervisor plan generated successfully');
+
+    // Parse and return JSON response
+    try {
+      // Extract JSON from the response
+      const jsonMatch = generatedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const jsonResponse = JSON.parse(jsonMatch[0]);
+        return res.json(jsonResponse);
+      } else {
+        throw new Error('No valid JSON found in response');
+      }
+    } catch (parseError) {
+      console.error('JSON parsing failed:', parseError);
+      return res.status(500).json({
+        error: 'Response Parse Error',
+        message: 'Failed to parse generated supervisor plan as JSON',
+        rawResponse: generatedText
+      });
+    }
+
+  } catch (error) {
+    console.error('Supervisor plan generation error:', error);
+    
+    if (error.response?.status === 429) {
+      return res.status(429).json({
+        error: 'Rate Limit Exceeded',
+        message: 'Too many requests. Please try again later.'
+      });
+    }
+    
+    if (error.code === 'ECONNABORTED') {
+      return res.status(408).json({
+        error: 'Request Timeout',
+        message: 'The AI service took too long to respond. Please try again.'
+      });
+    }
+
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to generate supervisor plan',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
 // GET /api/plan/test - Test endpoint
 router.get('/test', (req, res) => {
   res.json({
     message: 'Plan API is working',
     timestamp: new Date().toISOString(),
     endpoints: {
-      'POST /api/plan': 'Generate development plan',
+      'POST /api/plan': 'Generate full development plan',
+      'POST /api/plan/supervisor': 'Generate supervisor-only plan (agents + directives)',
       'GET /api/plan/test': 'Test endpoint'
     }
   });

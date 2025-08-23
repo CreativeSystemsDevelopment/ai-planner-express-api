@@ -3,6 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
+const helmet = require('helmet');
+const morgan = require('morgan');
+require('dotenv').config();
 
 const planRoutes = require('./routes/plan');
 const healthRoutes = require('./routes/health');
@@ -40,9 +43,10 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       plan: '/api/plan',
+      supervisor: '/api/plan/supervisor',
       health: '/api/health'
     },
-    documentation: 'https://github.com/CreativeSystemsDevelopment/ai-planner-api'
+    documentation: 'https://github.com/CreativeSystemsDevelopment/ai-planner-express-api'
   });
 });
 
